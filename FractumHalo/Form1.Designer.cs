@@ -117,6 +117,7 @@ namespace FractumHalo
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Fractum";
             this.Text = "Fractum Halo Client";
+            this.Load += new System.EventHandler(this.Fractum_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

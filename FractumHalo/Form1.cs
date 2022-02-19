@@ -1,14 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using System.IO;
-using System.Security.Cryptography;
 using System.Net;
+using System.Security.Cryptography;
+using System.Windows.Forms;
+
+using AutoUpdaterDotNET;
+
+using Microsoft.AppCenter;
+using Microsoft.AppCenter.Analytics;
+using Microsoft.AppCenter.Crashes;
 
 namespace FractumHalo
 {
@@ -31,13 +32,13 @@ namespace FractumHalo
             Console.WriteLine("Starting checksum loop");
 
             // TODO This should be a function, I'll change that later.
-           foreach(var line in Checksums) //Loop through each loaded hash and check if they are correct.
+            foreach (var line in Checksums) //Loop through each loaded hash and check if they are correct.
             {
                 string filepathToCheck = installPath + "\\" + line.Key;
                 CheckIfHashesMatch(filepathToCheck, line.Value, line.Key);
 
             }
-           
+
         }
 
 
@@ -50,7 +51,7 @@ namespace FractumHalo
 
             using (var stream = new BufferedStream(File.OpenRead(filepath), 1200000)) //Read files from the path, with a 1,200,000 byte buffer size.
             {
-                
+
                 {
                     MD5 md5 = new MD5CryptoServiceProvider();
                     byte[] checksum = md5.ComputeHash(stream);
@@ -89,33 +90,33 @@ namespace FractumHalo
 
         public void LoadChecksumFile()
 
-            /*
-             * Opens a checksums.md5 file from the location selected by the folderBrowser.
-             * Loads the contents into a dictionary using the path as a key, and the hash as the value.
-             */
+        /*
+         * Opens a checksums.md5 file from the location selected by the folderBrowser.
+         * Loads the contents into a dictionary using the path as a key, and the hash as the value.
+         */
 
         {
             using (System.IO.StreamReader streamreader = new System.IO.StreamReader(folderBrowserDialog1.SelectedPath.ToString() + "\\" + "checksums.md5"))
             {
                 Console.WriteLine("LoadChecksumFile has been called. Starting streamreader.");
-                while (!streamreader.EndOfStream) // Keep reading until we get to the end.
+                while (!streamreader.EndOfStream) // Keep reading until until theres nothing left.
                 {
                     string splitMe = streamreader.ReadLine();
-                    string[] checksumLine = splitMe.Split(new[] { " *" }, StringSplitOptions.None); //Split at the colons
-                    
-                    if (checksumLine.Length != 2)// If we get an incorrect amount, log it in console.
+                    string[] checksumLine = splitMe.Split(new[] { " *" }, StringSplitOptions.None); //Split the hash from the path.
+
+                    if (checksumLine.Length != 2)// If we get an incorrect amount, log it in the console.
                     {
                         Console.WriteLine("Checksum.Length != 2");
                         continue;
                     }
-                    else if (checksumLine.Length == 2) //  If there are 2 results, add them to the dictionary
+                    else if (checksumLine.Length == 2) //  If there are 2 results, as there should be, add them to the dictionary
                     {
                         Console.WriteLine(checksumLine[1] + ":" + checksumLine[0]);
                         //Read order is flipped. Dictionary is stored as the filepath first as the key, and the md5 is the value.
                         //This is because it's possible to have two of the same checksums in your install. (One file in two places.) But it's impossible to have two files at the same path.
                         Checksums.Add(checksumLine[1].Trim(), checksumLine[0].Trim());
                     }
-                    
+
                 }
                 Console.WriteLine("LoadChecksumFile complete.");
             }
@@ -144,6 +145,15 @@ namespace FractumHalo
         private void tbxInstallPath_TextChanged(object sender, EventArgs e)
         {
             btnCheckFiles.Enabled = true;
+        }
+
+        private void Fractum_Load(object sender, EventArgs e)
+        {
+            //Update check on load.
+
+            Console.WriteLine("Form loaded, updater starting.");
+            AutoUpdater.RunUpdateAsAdmin = false;
+            AutoUpdater.Start("https://halo.fractum.games/FractumLauncher.xml");
         }
     }
 }
